@@ -34,9 +34,6 @@ class FlowARLightningModule(pl.LightningModule):
         ar_mlp_ratio: float = 4.0,
         attn_drop: float = 0.0,
         proj_drop: float = 0.0,
-        flow_width: int = 1024,
-        flow_depth: int = 3,
-        cross: bool = False,
         cond_channels: int = 266,
         spatial_dim: int = 5,
 
@@ -87,9 +84,6 @@ class FlowARLightningModule(pl.LightningModule):
             mlp_ratio=ar_mlp_ratio,
             attn_drop=attn_drop,
             proj_drop=proj_drop,
-            flow_width=flow_width,
-            flow_depth=flow_depth,
-            cross=cross,
             num_tokens_per_patch=tokens_per_patch,
             patch_spatial=patch_spatial,
             cond_channels=cond_channels,
@@ -199,7 +193,7 @@ class FlowARLightningModule(pl.LightningModule):
 
         mu = self.encode_to_tokens(x_od)
         lengths = group_lengths(groups) if groups is not None else self._build_group_lengths()
-        fm_loss,x0_pred = self.model(gt_tokens=mu, groups=lengths, pop_condition=condition_vec)
+        token_loss,x0_pred = self.model(gt_tokens=mu, groups=lengths, pop_condition=condition_vec)
         x0_pred = x0_pred.reshape(x0_pred.shape[0], -1, self.hparams.tokens_per_patch, self.hparams.token_dim)
         x_hat = self.vae.decode(x0_pred)
         x_od = self.denormalize(x_od)
@@ -244,10 +238,10 @@ class FlowARLightningModule(pl.LightningModule):
         w_struct = self.get_loss_struct_weight()
 
 
-        loss = fm_loss+w_rel*loss_rel+w_struct*loss_struct
+        loss = token_loss+w_rel*loss_rel+w_struct*loss_struct
 
 
-        self.log('train/fm_loss', fm_loss, on_step=True, on_epoch=True, prog_bar=True)
+        self.log('train/token_loss', token_loss, on_step=True, on_epoch=True, prog_bar=True)
         self.log('train/loss_rel', loss_rel, on_step=True, on_epoch=True, prog_bar=True)
         self.log('train/loss_rel_weight', w_rel, on_step=True, on_epoch=True, prog_bar=True)
         self.log('train/loss_struct', loss_struct, on_step=True, on_epoch=True, prog_bar=True)
@@ -326,12 +320,7 @@ class FlowARLightningModule(pl.LightningModule):
 
                 sampled_tokens = self.model.sample(
                     pop_condition=condition_vec,
-                    num_steps=25,
                     groups=lengths,
-                    sampler_fn=None,
-                    guidance_scale=1.0,
-                    guidance_low=0.0,
-                    guidance_high=1.0,
                 )
             else:
 
@@ -339,12 +328,7 @@ class FlowARLightningModule(pl.LightningModule):
                 dummy_cond = torch.zeros(B, self.hparams.cond_channels, 2236, 1, device=x_od.device)
                 sampled_tokens = self.model.sample(
                     pop_condition=dummy_cond,
-                    num_steps=25,
                     groups=lengths,
-                    sampler_fn=None,
-                    guidance_scale=1.0,
-                    guidance_low=0.0,
-                    guidance_high=1.0,
                 )
 
 
@@ -509,12 +493,7 @@ class FlowARLightningModule(pl.LightningModule):
 
             sampled_tokens = self.model.sample(
                 pop_condition=condition_vec,
-                num_steps=25,
                 groups=groups,
-                sampler_fn=None,
-                guidance_scale=1.0,
-                guidance_low=0.0,
-                guidance_high=1.0,
             )
         else:
 
@@ -522,12 +501,7 @@ class FlowARLightningModule(pl.LightningModule):
             dummy_cond = torch.zeros(B, self.hparams.cond_channels, 2236, 1, device=x_od.device)
             sampled_tokens = self.model.sample(
                 pop_condition=dummy_cond,
-                num_steps=25,
                 groups=groups,
-                sampler_fn=None,
-                guidance_scale=1.0,
-                guidance_low=0.0,
-                guidance_high=1.0,
             )
 
 

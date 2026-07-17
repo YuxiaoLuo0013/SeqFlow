@@ -53,9 +53,6 @@ def build_module(config: dict) -> FlowARLightningModule:
         ar_mlp_ratio=model_cfg["ar_mlp_ratio"],
         attn_drop=model_cfg["attn_drop"],
         proj_drop=model_cfg["proj_drop"],
-        flow_width=model_cfg["flow_width"],
-        flow_depth=model_cfg["flow_depth"],
-        cross=model_cfg["cross"],
         cond_channels=model_cfg.get("cond_channels", 266),
         spatial_dim=model_cfg.get("spatial_dim", 5),
         max_group_len=model_cfg["max_group_len"],
@@ -186,12 +183,7 @@ def sample_batch(module: FlowARLightningModule, batch: Dict[str, Any], device: t
             )
         sampled_tokens = module.model.sample(
             pop_condition=condition,
-            num_steps=25,
             groups=groups,
-            sampler_fn=None,
-            guidance_scale=1.0,
-            guidance_low=0.0,
-            guidance_high=1.0,
         )
         sampled_tokens = sampled_tokens.reshape(
             sampled_tokens.shape[0], -1, module.hparams.tokens_per_patch, module.hparams.token_dim

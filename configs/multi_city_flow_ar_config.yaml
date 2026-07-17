@@ -35,9 +35,6 @@ model:
   ar_mlp_ratio: 4.0
   attn_drop: 0.1
   proj_drop: 0.1
-  flow_width: 128
-  flow_depth: 1
-  cross: false
   cond_channels: 266
   spatial_dim: 5
   max_group_len: 512
