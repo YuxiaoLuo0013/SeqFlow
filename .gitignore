@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+data/
+outputs/
+output/
+logs/
+checkpoints/
+*.ckpt
+*.pt
+*.pth
+*.npy
+*.npz
+*.csv
+*.zip
+*.tar.gz
+.DS_Store

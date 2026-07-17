@@ -1,0 +1,70 @@
+data:
+  data_dir: ./data
+  train_cities: &id001
+  - Shanghai
+  - Shenzhen
+  - Wuhan
+  test_cities: *id001
+  norm_stats_path: ./configs/norm_stats.yaml
+  batch_size: 128
+  num_workers: 4
+  normalize: true
+  hours: null
+  train_val_split: 0.8
+model:
+  num_regions: 834
+  time_steps: 168
+  patch_spatial: 16
+  patch_temporal: 24
+  embed_dim: 128
+  num_encoder_layers: 2
+  num_decoder_layers: 2
+  num_heads: 8
+  mlp_ratio: 4
+  dropout: 0.1
+  tokens_per_patch: 7
+  token_dim: 128
+training:
+  learning_rate: 0.0001
+  weight_decay: 1.0e-05
+  scheduler_type: cosine
+  warmup_steps: 1000
+  max_steps: -1
+  max_epochs: 500
+  recon_loss: huber
+  recon_weight: 1.0
+  kl_weight: 0.01
+  val_check_interval: 1.0
+  log_every_n_steps: 5
+  save_reconstructions: false
+trainer:
+  accelerator: gpu
+  devices: 1
+  precision: bf16
+  gradient_clip_val: 1.0
+  accumulate_grad_batches: 1
+  check_val_every_n_epoch: 10
+  num_sanity_val_steps: 0
+  enable_checkpointing: true
+  enable_progress_bar: false
+  enable_model_summary: true
+  deterministic: false
+  benchmark: true
+callbacks:
+  model_checkpoint:
+    monitor: val/cpc
+    mode: max
+    save_top_k: 1
+    save_last: false
+    auto_insert_metric_name: false
+  early_stopping:
+    monitor: val/cpc
+    mode: max
+    patience: 300
+    min_delta: 0.0
+  learning_rate_monitor:
+    logging_interval: step
+logging:
+  save_dir: ./logs
+  name: vae_multi_city_three_cities_epoch500_cpc
+  version: null

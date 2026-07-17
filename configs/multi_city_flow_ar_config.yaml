@@ -1,0 +1,87 @@
+data:
+  data_dir: ./data
+  train_cities:
+  - Shenzhen
+  - Wuhan
+  test_cities:
+  - Shanghai
+  norm_stats_path: ./configs/norm_stats.yaml
+  batch_size: 128
+  num_workers: 4
+  normalize: true
+  hours: null
+  use_population: true
+  use_tfidf: true
+  use_spatial_features: true
+  train_val_split: 0.8
+vae:
+  ckpt: __FOLD_VAE_CKPT_TO_BE_FILLED__
+  num_regions: 834
+  time_steps: 168
+  patch_spatial: 16
+  patch_temporal: 24
+  embed_dim: 128
+  num_encoder_layers: 2
+  num_decoder_layers: 2
+  num_heads: 8
+  mlp_ratio: 4
+  dropout: 0
+  tokens_per_patch: 7
+  token_dim: 128
+model:
+  model_dim: 128
+  depth: 8
+  ar_heads: 8
+  ar_mlp_ratio: 4.0
+  attn_drop: 0.1
+  proj_drop: 0.1
+  flow_width: 128
+  flow_depth: 1
+  cross: false
+  cond_channels: 266
+  spatial_dim: 5
+  max_group_len: 512
+training:
+  lr: 5.0e-05
+  weight_decay: 1.0e-06
+  epochs: 1000
+  precision: bf16-mixed
+  accumulate_grad_batches: 1
+  log_every_n_steps: 50
+  scheduler_type: cosine
+  warmup_steps: 1000
+  max_steps: -1
+trainer:
+  accelerator: gpu
+  devices:
+  - 0
+  gradient_clip_val: 3
+  check_val_every_n_epoch: 10
+  enable_checkpointing: true
+  enable_progress_bar: false
+  enable_model_summary: true
+  deterministic: false
+  benchmark: true
+  num_sanity_val_steps: 0
+  limit_val_batches: 1.0
+callbacks:
+  model_checkpoint:
+    monitor: val/cpc
+    mode: max
+    save_top_k: 1
+    save_last: true
+    auto_insert_metric_name: false
+    save_on_train_epoch_end: false
+  early_stopping:
+    monitor: val/cpc
+    mode: max
+    patience: 20
+    min_delta: 0.0
+    check_on_train_epoch_end: false
+    min_monitor_epoch: 0
+  learning_rate_monitor:
+    logging_interval: step
+logging:
+  save_dir: ./logs
+  name: flow_ar_multi_city
+  version: null
